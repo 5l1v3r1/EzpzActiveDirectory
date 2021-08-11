@@ -1,0 +1,94 @@
+{
+  "main": {
+    "id": "c0d072def9b577e7",
+    "type": "split",
+    "children": [
+      {
+        "id": "e3fbbefcf9fc93d4",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "README.md",
+            "mode": "source"
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6741dbc80f0e5ed4",
+    "type": "split",
+    "children": [
+      {
+        "id": "e0ce10ecf25ec087",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "70b23d12c90ee591",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "a72b986b771d8027",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "dd3dd74168ca9b13",
+    "type": "split",
+    "children": [
+      {
+        "id": "1e4430c242bf308d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b02f0525009ec70f",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "README.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "e3fbbefcf9fc93d4",
+  "lastOpenFiles": [
+    "README.md",
+    "Pasted image 20210811222825.png"
+  ]
+}
