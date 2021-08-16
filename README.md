@@ -794,33 +794,33 @@ ls \\DC01\c$
 
 - Create a user (RBCDUser). Go to Server Manager -> Tools -> Active Directory Users and Computers. Right click on Users and click New -> User. Fill in all the details.
 
-![[Pasted image 20210816212643.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816212643.png)
 
-![[Pasted image 20210816212710.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816212710.png)
 
-![[Pasted image 20210816212735.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816212735.png)
 
 - Then, go to the computers that we want (I use DC01) and right click Properties. 
 
-![[Pasted image 20210816213024.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816213024.png)
 
 - Go to security tab (If you cannot see it just go to View -> Advanced Features). 
 
-![[Pasted image 20210816214157.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816214157.png)
 
 - Then click on Advanced -> Add -> Select a principal.
 
-![[Pasted image 20210816214242.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816214242.png)
 
 - Clear all permissions. Then we can do 2 different things whether to make this user have **Generic Write** or **Generic All**
 
 1. Generic Write. Please tick on these permissions. **(Write all properties, Read permissions, All validated writes)**
 
-![[Pasted image 20210816214601.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816214601.png)
 
 2. Generic All . Just click on **Full Control**.
 
-![[Pasted image 20210816214451.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816214451.png)
 
 - I'm going to try with **Generic Write **only.
 
@@ -841,7 +841,7 @@ User Name     SID
 bank\rbcduser S-1-5-21-1107409599-3969185633-1580028286-1112
 ```
 
-![[Pasted image 20210816220206.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816220206.png)
 
 ```bash
 2. Run these commands to check if the user have Generic Write / Generic All
@@ -867,7 +867,7 @@ PropagationFlags      : None
 AuditFlags            : None
 ```
 
-![[Pasted image 20210816220237.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816220237.png)
 
 ```bash
 3. Run this to verify again the SID we found is the same as our user or not
@@ -877,7 +877,7 @@ ConvertFrom-SID $ACE.SecurityIdentifier
 BANK\RBCDUser
 ```
 
-![[Pasted image 20210816220253.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816220253.png)
 
 ### Attack
 
@@ -910,7 +910,7 @@ sekurlsa::logonpasswords
 Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofotheridentity'
 ```
 
-![[Pasted image 20210816224827.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816224827.png)
 
 2. Using ADModule
 
@@ -942,7 +942,7 @@ sekurlsa::logonpasswords
 Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofotheridentity'
 ```
 
-![[Pasted image 20210816224827.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816224827.png)
 
 3. Using PowerMad
 
@@ -968,7 +968,7 @@ Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofo
 
 ```
 
-![[Pasted image 20210816231803.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816231803.png)
 
 ### References
 
