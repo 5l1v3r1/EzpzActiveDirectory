@@ -9,8 +9,12 @@
         "state": {
           "type": "markdown",
           "state": {
+<<<<<<< Updated upstream
             "file": "README.md",
             "mode": "source"
+=======
+            "file": "src/Pasted image 20210816212643.png"
+>>>>>>> Stashed changes
           }
         }
       }
@@ -68,7 +72,11 @@
             "state": {
               "type": "backlink",
               "state": {
+<<<<<<< Updated upstream
                 "file": "README.md",
+=======
+                "file": "src/Pasted image 20210816212643.png",
+>>>>>>> Stashed changes
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -88,8 +96,13 @@
   },
   "active": "e3fbbefcf9fc93d4",
   "lastOpenFiles": [
+<<<<<<< Updated upstream
     "README.md",
     "Pasted image 20210816212643.png",
+=======
+    "Pasted image 20210816212643.png",
+    "README.md",
+>>>>>>> Stashed changes
     "src/Pasted image 20210812164956.png",
     "Pasted image 20210812164956.png",
     "Pasted image 20210811222825.png"
