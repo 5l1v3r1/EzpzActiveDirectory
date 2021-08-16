@@ -7,9 +7,10 @@
         "id": "e3fbbefcf9fc93d4",
         "type": "leaf",
         "state": {
-          "type": "image",
+          "type": "markdown",
           "state": {
-            "file": "src/Pasted image 20210812164956.png"
+            "file": "README.md",
+            "mode": "source"
           }
         }
       }
@@ -67,7 +68,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "src/Pasted image 20210812164956.png",
+                "file": "README.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -87,8 +88,10 @@
   },
   "active": "e3fbbefcf9fc93d4",
   "lastOpenFiles": [
-    "Pasted image 20210812164956.png",
     "README.md",
+    "Pasted image 20210816212643.png",
+    "src/Pasted image 20210812164956.png",
+    "Pasted image 20210812164956.png",
     "Pasted image 20210811222825.png"
   ]
 }
